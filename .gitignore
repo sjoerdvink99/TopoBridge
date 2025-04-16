@@ -1,0 +1,46 @@
+# Node.js
+node_modules/
+bun.lockb
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.env
+env/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Jupyter notebooks
+*.ipynb
+
+# macOS
+.DS_Store
+
+# Build / dist
+dist/
+build/
+
+# Logs and local data
+*.log
+*.sqlite3
+*.db
+*.csv
+*.tsv
+*.parquet
+*.h5
+*.jsonl
+
+# VSCode
+.vscode/
+
+# Data folder (if it's large or auto-generated)
+data/
+
+# Static build artifacts
+src/topo_widget/static/

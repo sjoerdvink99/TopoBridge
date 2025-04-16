@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "dev": "npm run build -- --sourcemap=inline --watch",
+    "build": "bun build js/widget.tsx --minify --format=esm --outdir=src/topo_widget/static --asset-naming=[name].[ext]",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anywidget/react": "^0.2.0",
+    "d3": "^7.9.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "typescript": "^5.8.2"
+  }
+}

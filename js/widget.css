@@ -1,0 +1,399 @@
+/* Improved header styles */
+.widget-header {
+  background: linear-gradient(90deg, #f6f8fa 0%, #edf2f7 100%);
+  padding: 20px 24px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.widget-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+
+.header-description {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #4a5568;
+  max-width: 600px;
+}
+
+.highlight {
+  font-weight: 600;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.highlight.attribute {
+  color: #3182ce;
+  background-color: rgba(66, 153, 225, 0.1);
+}
+
+.highlight.topology {
+  color: #48bb78;
+  background-color: rgba(72, 187, 120, 0.1);
+}
+
+.header-icon {
+  margin-left: 20px;
+}
+
+.header-icon svg {
+  display: block;
+}
+
+/* Add a subtle animation to the header icon nodes on hover */
+.widget-header:hover .header-icon svg circle {
+  animation: pulse 1.5s infinite alternate ease-in-out;
+}
+
+.widget-header:hover .header-icon svg path {
+  animation: draw 2s infinite alternate ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    r: 2;
+  }
+  100% {
+    r: 2.5;
+  }
+}
+
+@keyframes draw {
+  0% {
+    stroke-dasharray: 12;
+    stroke-dashoffset: 12;
+  }
+  100% {
+    stroke-dasharray: 12;
+    stroke-dashoffset: 0;
+  }
+}
+
+.alpha-control {
+  margin: 1.5rem 0;
+  width: 100%;
+  max-width: 400px;
+}
+
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.slider-label label {
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.value-display {
+  font-weight: 600;
+  color: #2c3e50;
+  background-color: #e2e8f0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.styled-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  outline: none;
+}
+
+.styled-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.styled-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.styled-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    #3b82f6 0%,
+    #3b82f6 calc(100% * var(--alpha, 0)),
+    #e2e8f0 calc(100% * var(--alpha, 0)),
+    #e2e8f0 100%
+  );
+  height: 8px;
+  border-radius: 4px;
+}
+
+.data-container {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Update graph-view styling for full container usage */
+.graph-view {
+  flex: 1;
+  min-width: 0; /* Prevents flex items from overflowing */
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  height: 450px; /* Set a fixed height */
+  position: relative; /* For proper SVG sizing */
+  display: flex; /* Use flexbox to allow SVG to fill */
+  flex-direction: column; /* Stack children vertically */
+}
+
+.graph-view svg {
+  flex: 1; /* Fill available space */
+  overflow: visible; /* Allow for legends/labels to exceed boundaries */
+}
+
+.selection-view {
+  flex: 1;
+  min-width: 0; /* Prevents flex items from overflowing */
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* You can add this to your widget.css file */
+.selection-view {
+  padding: 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  max-height: 600px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.selection-view.empty {
+  color: #718096;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.selection-view h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+  color: #2d3748;
+}
+
+.attribute-summaries {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px; /* Reduced from 15px */
+}
+
+.attribute-summary {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px; /* Reduced from 10px */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.attribute-summary h4 {
+  margin-top: 0;
+  margin-bottom: 5px; /* Reduced from 10px */
+  color: #2b6cb0;
+  font-size: 12px; /* Reduced from 14px */
+  text-align: left; /* Changed from center */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bar {
+  transition: opacity 0.2s;
+}
+
+.bar:hover {
+  opacity: 0.8;
+}
+
+/* Make SVG elements more compact */
+.numeric-distribution svg,
+.categorical-chart svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Smaller axis lines */
+.selection-view path.domain,
+.selection-view .tick line {
+  stroke-width: 1px;
+}
+
+/* For highlighting hover states */
+.numeric-distribution rect:hover,
+.categorical-chart rect:hover {
+  fill: #3182ce;
+}
+
+/* Add a legend for the comparison chart */
+.chart-legend {
+  display: flex;
+  font-size: 9px;
+  justify-content: center;
+  margin-top: -5px;
+  margin-bottom: 5px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.legend-color {
+  width: 10px;
+  height: 10px;
+  margin-right: 3px;
+  display: inline-block;
+}
+
+.legend-all {
+  background-color: #cbd5e0;
+}
+
+.legend-selection {
+  background-color: #f56565;
+}
+
+/* Updated slider styles */
+.embedding-control {
+  margin: 20px 0;
+  width: 100%;
+  max-width: 600px;
+}
+
+.embedding-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.embedding-type {
+  font-weight: 600;
+}
+
+.embedding-type.attribute {
+  color: #4299e1;
+}
+
+.embedding-type.topology {
+  color: #48bb78;
+}
+
+.embedding-value {
+  background-color: #edf2f7;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.slider-container {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.styled-slider {
+  width: 100%;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #4299e1, #48bb78); /* Blue to green */
+  border-radius: 4px;
+  outline: none;
+}
+
+.styled-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #2d3748;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.styled-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #2d3748;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider-markers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #4a5568;
+  margin-top: 4px;
+}
+
+.slider-explanation {
+  font-size: 13px;
+  color: #4a5568;
+  margin-top: 8px;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Style for the node tooltip */
+.node-tooltip {
+  transition: opacity 0.2s ease;
+  opacity: 0.9;
+  max-width: 200px;
+  line-height: 1.4;
+  color: #333;
+}
+
+.node-tooltip strong {
+  color: #2d3748;
+  font-weight: 600;
+}
