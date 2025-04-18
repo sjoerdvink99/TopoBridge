@@ -170,74 +170,74 @@ export function GraphView() {
       });
 
     // Add a color legend
-    const legendWidth = Math.min(200, width * 0.4); // Constrain legend width for small screens
-    const legendHeight = 20;
-    const legendX = margin;
-    const legendY = height - margin - legendHeight - 20; // Position above the bottom
+    // const legendWidth = Math.min(200, width * 0.4); // Constrain legend width for small screens
+    // const legendHeight = 20;
+    // const legendX = margin;
+    // const legendY = height - margin - legendHeight - 20; // Position above the bottom
 
-    const defs = svg.append("defs");
-    const gradient = defs
-      .append("linearGradient")
-      .attr("id", "travel-distance-gradient")
-      .attr("x1", "0%")
-      .attr("y1", "0%")
-      .attr("x2", "100%")
-      .attr("y2", "0%");
+    // const defs = svg.append("defs");
+    // const gradient = defs
+    //   .append("linearGradient")
+    //   .attr("id", "travel-distance-gradient")
+    //   .attr("x1", "0%")
+    //   .attr("y1", "0%")
+    //   .attr("x2", "100%")
+    //   .attr("y2", "0%");
 
-    gradient
-      .append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", colorScale(minDistance));
+    // gradient
+    //   .append("stop")
+    //   .attr("offset", "0%")
+    //   .attr("stop-color", colorScale(minDistance));
 
-    gradient
-      .append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", colorScale(maxDistance));
+    // gradient
+    //   .append("stop")
+    //   .attr("offset", "100%")
+    //   .attr("stop-color", colorScale(maxDistance));
 
-    // Add a background for the legend to make it stand out
-    svg
-      .append("rect")
-      .attr("x", legendX - 5) // Add padding around the legend
-      .attr("y", legendY - 20) // Cover title and legend
-      .attr("width", legendWidth + 10)
-      .attr("height", legendHeight + 35) // Make sure it covers the text below
-      .attr("rx", 4) // Rounded corners
-      .attr("ry", 4)
-      .attr("fill", "rgba(255, 255, 255, 0.9)") // Slightly transparent white
-      .attr("stroke", "#e2e8f0")
-      .attr("stroke-width", 1);
+    // // Add a background for the legend to make it stand out
+    // svg
+    //   .append("rect")
+    //   .attr("x", legendX - 5) // Add padding around the legend
+    //   .attr("y", legendY - 20) // Cover title and legend
+    //   .attr("width", legendWidth + 10)
+    //   .attr("height", legendHeight + 35) // Make sure it covers the text below
+    //   .attr("rx", 4) // Rounded corners
+    //   .attr("ry", 4)
+    //   .attr("fill", "rgba(255, 255, 255, 0.9)") // Slightly transparent white
+    //   .attr("stroke", "#e2e8f0")
+    //   .attr("stroke-width", 1);
 
-    svg
-      .append("rect")
-      .attr("x", legendX)
-      .attr("y", legendY)
-      .attr("width", legendWidth)
-      .attr("height", legendHeight)
-      .style("fill", "url(#travel-distance-gradient)");
+    // svg
+    //   .append("rect")
+    //   .attr("x", legendX)
+    //   .attr("y", legendY)
+    //   .attr("width", legendWidth)
+    //   .attr("height", legendHeight)
+    //   .style("fill", "url(#travel-distance-gradient)");
 
-    svg
-      .append("text")
-      .attr("x", legendX)
-      .attr("y", legendY - 5)
-      .style("font-size", "10px")
-      .style("font-weight", "bold")
-      .text("Travel Distance (α=0 to α=1)");
+    // svg
+    //   .append("text")
+    //   .attr("x", legendX)
+    //   .attr("y", legendY - 5)
+    //   .style("font-size", "10px")
+    //   .style("font-weight", "bold")
+    //   .text("Travel Distance (α=0 to α=1)");
 
-    svg
-      .append("text")
-      .attr("x", legendX)
-      .attr("y", legendY + legendHeight + 12)
-      .style("font-size", "9px")
-      .style("text-anchor", "start")
-      .text(`Min: ${minDistance.toFixed(2)}`);
+    // svg
+    //   .append("text")
+    //   .attr("x", legendX)
+    //   .attr("y", legendY + legendHeight + 12)
+    //   .style("font-size", "9px")
+    //   .style("text-anchor", "start")
+    //   .text(`Min: ${minDistance.toFixed(2)}`);
 
-    svg
-      .append("text")
-      .attr("x", legendX + legendWidth)
-      .attr("y", legendY + legendHeight + 12)
-      .style("font-size", "9px")
-      .style("text-anchor", "end")
-      .text(`Max: ${maxDistance.toFixed(2)}`);
+    // svg
+    //   .append("text")
+    //   .attr("x", legendX + legendWidth)
+    //   .attr("y", legendY + legendHeight + 12)
+    //   .style("font-size", "9px")
+    //   .style("text-anchor", "end")
+    //   .text(`Max: ${maxDistance.toFixed(2)}`);
 
     // Create a selection rectangle for bounding box selection
     const selectionRect = svg

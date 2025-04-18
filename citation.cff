@@ -1,0 +1,16 @@
+cff-version: 1.0.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Vink"
+    given-names: "Sjoerd"
+    orcid: "https://orcid.org/0009-0006-1094-3725"
+  - family-names: "Chang"
+    given-names: "Remco"
+    orcid: "https://orcid.org/0000-0002-6484-6430"
+  - family-names: "Behrisch"
+    given-names: "Michael"
+    orcid: "https://orcid.org/0000-0002-1102-103X"
+title: "TopoBridge: Interactive Layout Blending for Multivariate Graphs"
+version: 1.0.0
+date-released: 2025-04-30
+url: "https://github.com/sjoerdvink99/TopoBridge"

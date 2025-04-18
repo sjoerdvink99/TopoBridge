@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "topo_widget"
+name = "topobridge"
 version = "0.0.0"
 dependencies = ["anywidget"]
 readme = "README.md"
@@ -22,12 +22,12 @@ dev = ["watchfiles", "jupyterlab"]
 
 [tool.hatch.build]
 only-packages = true
-artifacts = ["src/topo_widget/static/*"]
+artifacts = ["src/topobridge/static/*"]
 
 [tool.hatch.build.hooks.jupyter-builder]
 build-function = "hatch_jupyter_builder.npm_builder"
-ensured-targets = ["src/topo_widget/static/widget.js"]
-skip-if-exists = ["src/topo_widget/static/widget.js"]
+ensured-targets = ["src/topobridge/static/widget.js"]
+skip-if-exists = ["src/topobridge/static/widget.js"]
 dependencies = ["hatch-jupyter-builder>=0.5.0"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]

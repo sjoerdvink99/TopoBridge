@@ -65,7 +65,7 @@ class Walklets(Estimator):
         self._set_seed()
         walker = RandomWalker(self.walk_length, self.walk_number)
         walker.do_walks(graph)
-        self.walksers = walker.walks #############
+        self.walkers = walker.walks #############
         num_of_nodes = graph.number_of_nodes()
 
         self._embedding = []

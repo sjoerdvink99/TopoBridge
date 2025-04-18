@@ -2,21 +2,20 @@ import importlib.metadata
 import pathlib
 import json
 import numpy as np
-
 import anywidget
 import traitlets
-
 import networkx as nx
+
 from .embedding import FeatureWalk
 from .core import EmbeddingManager, LayoutManager
 
 try:
-    __version__ = importlib.metadata.version("topo_widget")
+    __version__ = importlib.metadata.version("topobridge")
 except importlib.metadata.PackageNotFoundError:
     __version__ = "unknown"
 
 
-class Widget(anywidget.AnyWidget):
+class TopoBridgeWidget(anywidget.AnyWidget):
     _esm = pathlib.Path(__file__).parent / "static" / "widget.js"
     _css = pathlib.Path(__file__).parent / "static" / "widget.css"
     
@@ -27,12 +26,12 @@ class Widget(anywidget.AnyWidget):
     selected_node_attributes = traitlets.Dict({}).tag(sync=True)
     all_node_attributes = traitlets.Dict({}).tag(sync=True)
     node_travel_distances = traitlets.Dict({}).tag(sync=True)
-    graph_edges = traitlets.List([]).tag(sync=True)  # New traitlet for edges
+    graph_edges = traitlets.List([]).tag(sync=True)
 
     def __init__(self, graph: nx.Graph, **kwargs):
         super().__init__(**kwargs)
         self._graph = graph
-        self.feature_walk = FeatureWalk(embedding_dim=16, compute_split=True)
+        self.feature_walk = FeatureWalk(embedding_dim=16)
         self.feature_walk.fit(self._graph)
         self.embedding_manager = EmbeddingManager(self.feature_walk)
         self.embedding_manager.precompute_embeddings()
@@ -42,7 +41,7 @@ class Widget(anywidget.AnyWidget):
         self._process_graph_attributes()
         self._update_node_positions(self.alpha)
         self._calculate_travel_distances()
-        self._extract_graph_edges()  # Add this method call
+        self._extract_graph_edges()
 
     def _process_graph_attributes(self):
         all_attrs = {}

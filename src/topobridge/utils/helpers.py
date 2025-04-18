@@ -18,12 +18,15 @@ def preprocess_graph_attributes(graph: nx.Graph) -> np.ndarray:
     boolean_attributes = attributes_df.select_dtypes(include='bool')
 
     # Normalize numerical attributes
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_numerical = scaler.fit_transform(numerical_attributes)
+    if not numerical_attributes.empty:
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaled_numerical = scaler.fit_transform(numerical_attributes)
+    else:
+        scaled_numerical = np.empty((attributes_df.shape[0], 0))
 
     # Encode categorical attributes using OneHotEncoder
     if not categorical_attributes.empty:
-        encoder = OneHotEncoder()
+        encoder = OneHotEncoder(sparse_output=False)  # Set sparse_output=False to avoid sparse matrices
         encoded_categorical = encoder.fit_transform(categorical_attributes)
     else:
         encoded_categorical = np.empty((attributes_df.shape[0], 0))
@@ -34,9 +37,19 @@ def preprocess_graph_attributes(graph: nx.Graph) -> np.ndarray:
     else:
         boolean_attributes = np.empty((attributes_df.shape[0], 0))
 
+    # Make sure all arrays are properly shaped
+    if scaled_numerical.size > 0 and scaled_numerical.ndim == 1:
+        scaled_numerical = scaled_numerical.reshape(-1, 1)
+        
+    if encoded_categorical.size > 0 and encoded_categorical.ndim == 1:
+        encoded_categorical = encoded_categorical.reshape(-1, 1)
+        
+    if boolean_attributes.size > 0 and boolean_attributes.ndim == 1:
+        boolean_attributes = boolean_attributes.reshape(-1, 1)
+
     # Combine all processed attributes
     processed_attributes = np.hstack((scaled_numerical, encoded_categorical, boolean_attributes))
-
+    
     return processed_attributes
 
 def print_graph_summary(graph):

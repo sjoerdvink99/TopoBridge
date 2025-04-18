@@ -11,6 +11,19 @@ export function SelectionView() {
   const [allNodeAttributes] = useModelState<NodeAttributes>(
     "all_node_attributes"
   );
+  const [selectedNodes, setSelectedNodes] =
+    useModelState<string[]>("selected_nodes");
+
+  // Fix type errors in handleBackgroundClick function
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only clear if clicking directly on the background (not on a chart)
+    if (
+      e.target instanceof HTMLDivElement &&
+      (e.target as HTMLDivElement).className === "selection-view"
+    ) {
+      setSelectedNodes([]);
+    }
+  };
 
   // Always show the view, even if no nodes are selected
   if (!allNodeAttributes || Object.keys(allNodeAttributes).length === 0) {
@@ -19,8 +32,10 @@ export function SelectionView() {
 
   // Group all attribute values by their key for aggregation
   const attributeGroups: Record<string, any[]> = {};
-  const attributeTypes: Record<string, "numeric" | "categorical" | "binary"> =
-    {};
+  const attributeTypes: Record<
+    string,
+    "numeric" | "categorical" | "binary" | "high_cardinality"
+  > = {};
   const allAttributeGroups: Record<string, any[]> = {};
   const selectedAttributeGroups: Record<string, any[]> = {};
 
@@ -84,7 +99,13 @@ export function SelectionView() {
         attributeTypes[key] = "numeric";
       }
     } else {
-      attributeTypes[key] = "categorical";
+      // For categorical data, check cardinality
+      const uniqueValues = new Set(values);
+      if (uniqueValues.size > 10) {
+        attributeTypes[key] = "high_cardinality";
+      } else {
+        attributeTypes[key] = "categorical";
+      }
     }
 
     // Initialize attributeGroups with all nodes - used for display
@@ -108,12 +129,12 @@ export function SelectionView() {
     ([attrName, values]) => {
       const isNumeric = attributeTypes[attrName] === "numeric";
       const isBinary = attributeTypes[attrName] === "binary";
+      const isHighCardinality = attributeTypes[attrName] === "high_cardinality";
       const selectedValues = selectedAttributeGroups[attrName] || [];
       const hasSelection = selectedValues.length > 0;
 
       return (
         <div key={attrName} className="attribute-summary">
-          <h4>{attrName}</h4>
           {isNumeric ? (
             <NumericDistribution
               name={attrName}
@@ -126,6 +147,13 @@ export function SelectionView() {
               name={attrName}
               values={selectedValues as number[]}
               allValues={values as number[]}
+              showSelectionOnly={false}
+            />
+          ) : isHighCardinality ? (
+            <HighCardinalityView
+              name={attrName}
+              values={selectedValues}
+              allValues={values}
               showSelectionOnly={false}
             />
           ) : (
@@ -142,7 +170,7 @@ export function SelectionView() {
   );
 
   return (
-    <div className="selection-view">
+    <div className="selection-view" onClick={handleBackgroundClick}>
       <h3>
         Attribute Summary{" "}
         {Object.keys(selectedNodeAttributes).length > 0
@@ -169,6 +197,11 @@ function NumericDistribution({
 }: NumericDistributionProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const hasSelection = values.length > 0;
+  const [selectedNodes, setSelectedNodes] =
+    useModelState<string[]>("selected_nodes");
+  const [allNodeAttributes] = useModelState<NodeAttributes>(
+    "all_node_attributes"
+  );
 
   useEffect(() => {
     if (!svgRef.current || allValues.length === 0) return;
@@ -356,9 +389,113 @@ function NumericDistribution({
       .attr("text-anchor", "end")
       .style("font-size", "9px")
       .text(statText);
-  }, [values, allValues, hasSelection]);
 
-  // Helper functions for kernel density estimation
+    // Add a selection area for brush interaction
+    const brush = d3
+      .brushX()
+      .extent([
+        [0, 0],
+        [innerWidth, innerHeight],
+      ])
+      .on("end", brushEnded);
+
+    // Fix: Make the overlay completely transparent
+    const brushGroup = g.append("g").attr("class", "brush").call(brush);
+
+    brushGroup.select(".overlay").attr("fill", "transparent");
+
+    brushGroup
+      .select(".selection")
+      .attr("fill", "rgba(245, 101, 101, 0.05)") // Almost transparent red
+      .attr("stroke", "#F56565")
+      .attr("stroke-width", 1)
+      .attr("stroke-dasharray", "2,2"); // Dotted outline instead
+
+    brushGroup
+      .selectAll(".handle")
+      .attr("stroke", "#F56565")
+      .attr("stroke-width", 1)
+      .attr("fill", "transparent");
+
+    const brushText = g
+      .append("text")
+      .attr("class", "brush-extent")
+      .attr("text-anchor", "middle")
+      .attr("y", innerHeight / 2)
+      .attr("fill", "#F56565")
+      .attr("font-size", "9px")
+      .attr("font-weight", "bold")
+      .attr("pointer-events", "none") // Make sure it doesn't interfere with brushing
+      .style("display", "none");
+
+    // Fix brush event handlers with proper types
+    brush
+      .on("brush", (event: d3.D3BrushEvent<unknown>) => {
+        if (!event.selection) return;
+
+        const [x0, x1] = (event.selection as [number, number]).map(
+          xScale.invert
+        );
+        const mid = (event.selection[0] + event.selection[1]) / 2;
+
+        brushText
+          .attr("x", mid)
+          .text(`${x0.toFixed(1)} - ${x1.toFixed(1)}`)
+          .style("display", null);
+      })
+      .on("end", (event: d3.D3BrushEvent<unknown>) => {
+        brushText.style("display", "none");
+
+        if (!event.selection) return; // No selection
+
+        const [x0, x1] = (event.selection as [number, number]).map(
+          xScale.invert
+        );
+
+        const nodesInRange = Object.entries(allNodeAttributes)
+          .filter(([nodeId, attrs]) => {
+            const value = Number(attrs[name]);
+            return !isNaN(value) && value >= x0 && value <= x1;
+          })
+          .map(([nodeId]) => nodeId);
+
+        if (event.sourceEvent && event.sourceEvent.shiftKey) {
+          setSelectedNodes([...selectedNodes, ...nodesInRange]);
+        } else {
+          setSelectedNodes(nodesInRange);
+        }
+
+        if (event.sourceEvent && event.sourceEvent.type === "dblclick") {
+          g.select(".brush").call(brush.move, null);
+        }
+      });
+
+    function brushEnded(event: d3.D3BrushEvent<unknown>) {
+      brushText.style("display", "none");
+
+      if (!event.selection) return; // No selection
+
+      const [x0, x1] = (event.selection as [number, number]).map(xScale.invert);
+
+      const nodesInRange = Object.entries(allNodeAttributes)
+        .filter(([nodeId, attrs]) => {
+          const value = Number(attrs[name]);
+          return !isNaN(value) && value >= x0 && value <= x1;
+        })
+        .map(([nodeId]) => nodeId);
+
+      if (event.sourceEvent && event.sourceEvent.shiftKey) {
+        setSelectedNodes([...selectedNodes, ...nodesInRange]);
+      } else {
+        setSelectedNodes(nodesInRange);
+      }
+
+      if (event.sourceEvent && event.sourceEvent.type === "dblclick") {
+        g.select(".brush").call(brush.move, null);
+      }
+    }
+  }, [values, allValues, name, allNodeAttributes, setSelectedNodes]);
+
   function kernelDensityEstimator(kernel: (v: number) => number, X: number[]) {
     return function (sample: number[]) {
       return X.map((x) => [x, d3.mean(sample, (v) => kernel(x - v)) || 0]);
@@ -395,6 +532,11 @@ function BinaryBarChart({
   showSelectionOnly,
 }: BinaryBarChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [selectedNodes, setSelectedNodes] =
+    useModelState<string[]>("selected_nodes");
+  const [allNodeAttributes] = useModelState<NodeAttributes>(
+    "all_node_attributes"
+  );
 
   useEffect(() => {
     if (!svgRef.current || allValues.length === 0) return;
@@ -455,7 +597,33 @@ function BinaryBarChart({
       .attr("y", (d) => yScale(d.total / allValues.length))
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => innerHeight - yScale(d.total / allValues.length))
-      .attr("fill", "#4299e1"); // Blue to match nodes
+      .attr("fill", "#4299e1") // Blue to match nodes
+      .style("cursor", "pointer")
+      .on(
+        "click",
+        (
+          event: PointerEvent,
+          d: { label: string; selected: number; total: number }
+        ) => {
+          // Convert category to number for binary comparison
+          const categoryValue = Number(d.label);
+
+          // Find nodes with this binary value
+          const nodesWithValue = Object.entries(allNodeAttributes)
+            .filter(([nodeId, attrs]) => Number(attrs[name]) === categoryValue)
+            .map(([nodeId]) => nodeId);
+
+          // Support shift+click for adding to selection
+          if (event.shiftKey) {
+            setSelectedNodes([...selectedNodes, ...nodesWithValue]);
+          } else {
+            setSelectedNodes(nodesWithValue);
+          }
+
+          // Stop event propagation
+          event.stopPropagation();
+        }
+      );
 
     // Calculate the normalized heights for selection
     // This ensures the height represents the actual proportion
@@ -510,7 +678,7 @@ function BinaryBarChart({
       .attr("text-anchor", "end")
       .style("font-size", "9px")
       .text(`0: ${Math.round(zeroesPercent)}%, 1: ${Math.round(onesPercent)}%`);
-  }, [values, allValues]);
+  }, [values, allValues, name, allNodeAttributes, setSelectedNodes]);
 
   return (
     <div className="binary-chart">
@@ -534,6 +702,11 @@ function CategoricalBarChart({
   showSelectionOnly,
 }: CategoricalBarChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [selectedNodes, setSelectedNodes] =
+    useModelState<string[]>("selected_nodes");
+  const [allNodeAttributes] = useModelState<NodeAttributes>(
+    "all_node_attributes"
+  );
 
   useEffect(() => {
     if (!svgRef.current || allValues.length === 0) return;
@@ -579,10 +752,13 @@ function CategoricalBarChart({
       .sort((a, b) => b.sortValue - a.sortValue)
       .slice(0, 8); // Limit to top 8 categories
 
+    // Store the bar order based on the initial sort
+    const orderedCategories = counts.map((d) => d.category);
+
     // Create scales
     const xScale = d3
       .scaleBand()
-      .domain(counts.map((d) => d.category))
+      .domain(orderedCategories) // Use the stored order instead of calculating again
       .range([0, innerWidth])
       .padding(0.2);
 
@@ -615,7 +791,37 @@ function CategoricalBarChart({
         "height",
         (d) => innerHeight - yScale(d.totalCount / allValues.length)
       )
-      .attr("fill", "#4299e1"); // Blue to match nodes
+      .attr("fill", "#4299e1") // Blue to match nodes
+      .style("cursor", "pointer")
+      .on(
+        "click",
+        (
+          event: PointerEvent,
+          d: {
+            category: string;
+            selectionCount: number;
+            totalCount: number;
+            sortValue: number;
+          }
+        ) => {
+          event.preventDefault(); // Prevent default behavior
+
+          // Find nodes with this attribute value
+          const nodesWithValue = Object.entries(allNodeAttributes)
+            .filter(([nodeId, attrs]) => String(attrs[name]) === d.category)
+            .map(([nodeId]) => nodeId);
+
+          // Support shift+click to add to selection
+          if (event.shiftKey) {
+            setSelectedNodes([...selectedNodes, ...nodesWithValue]);
+          } else {
+            setSelectedNodes(nodesWithValue);
+          }
+
+          // Stop event propagation
+          event.stopPropagation();
+        }
+      );
 
     // Calculate the selected ratio for scaling
     const selectedTotal = values.length;
@@ -674,11 +880,176 @@ function CategoricalBarChart({
       .text(
         `${Math.round((values.length / allValues.length) * 100)}% selected`
       );
-  }, [values, allValues]);
+  }, [values, allValues, name, allNodeAttributes, setSelectedNodes]);
 
   return (
     <div className="categorical-chart">
       <svg ref={svgRef} width="200" height="120"></svg>
+    </div>
+  );
+}
+
+// Add after the other chart components
+
+type HighCardinalityViewProps = {
+  name: string;
+  values: any[];
+  allValues: any[];
+  showSelectionOnly: boolean;
+};
+
+function HighCardinalityView({
+  name,
+  values,
+  allValues,
+  showSelectionOnly,
+}: HighCardinalityViewProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const uniqueAllValues = new Set(allValues);
+  const uniqueSelectedValues = new Set(values);
+  const [selectedNodes, setSelectedNodes] =
+    useModelState<string[]>("selected_nodes");
+  const [allNodeAttributes] = useModelState<NodeAttributes>(
+    "all_node_attributes"
+  );
+
+  useEffect(() => {
+    if (!svgRef.current || allValues.length === 0) return;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
+
+    // Configuration
+    const width = 200;
+    const height = 80;
+    const margin = { top: 5, right: 10, bottom: 20, left: 25 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    // Create SVG group
+    const g = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Count stats about unique values
+    const totalUniqueCount = uniqueAllValues.size;
+    const selectedUniqueCount = uniqueSelectedValues.size;
+    const overlapCount = [...uniqueSelectedValues].filter((v) =>
+      uniqueAllValues.has(v)
+    ).length;
+
+    // Create scales for the breakdown
+    const xScale = d3.scaleLinear().domain([0, 1]).range([0, innerWidth]);
+
+    // Add a text summary instead of a chart
+    g.append("text")
+      .attr("x", innerWidth / 2)
+      .attr("y", 20)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "10px")
+      .text(`${totalUniqueCount} unique values`);
+
+    if (values.length > 0) {
+      g.append("text")
+        .attr("x", innerWidth / 2)
+        .attr("y", 35)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "10px")
+        .attr("fill", "#F56565")
+        .text(`${selectedUniqueCount} unique in selection`);
+
+      // How many are shared vs unique to selection
+      g.append("text")
+        .attr("x", innerWidth / 2)
+        .attr("y", 50)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "10px")
+        .text(
+          `${((values.length / allValues.length) * 100).toFixed(
+            1
+          )}% of data selected`
+        );
+    }
+
+    // Create a simple cardinality indicator bar
+    const cardinalityRect = g
+      .append("rect")
+      .attr("x", 0)
+      .attr("y", innerHeight - 10)
+      .attr("width", innerWidth)
+      .attr("height", 8)
+      .attr("fill", "#E2E8F0")
+      .attr("rx", 3);
+
+    // Indicator showing relative size of selection
+    if (values.length > 0) {
+      const selectionWidth = Math.max(
+        3, // Minimum width for visibility
+        (selectedUniqueCount / totalUniqueCount) * innerWidth
+      );
+
+      g.append("rect")
+        .attr("x", 0)
+        .attr("y", innerHeight - 10)
+        .attr("width", selectionWidth)
+        .attr("height", 8)
+        .attr("fill", "#F56565")
+        .attr("rx", 3);
+    }
+
+    // Add a caption
+    svg
+      .append("text")
+      .attr("x", width / 2)
+      .attr("y", height - 5)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "8px")
+      .text("High cardinality attribute (summary view)");
+
+    // Add a "select top 10 most common values" button
+    g.append("rect")
+      .attr("x", 20)
+      .attr("y", innerHeight - 30)
+      .attr("width", innerWidth - 40)
+      .attr("height", 20)
+      .attr("rx", 3)
+      .attr("fill", "#4299e1")
+      .style("cursor", "pointer")
+      .on("click", (event: PointerEvent) => {
+        // Count occurrences of each value
+        const valueCounts = new Map<any, number>();
+        Object.entries(allNodeAttributes).forEach(([nodeId, attrs]) => {
+          const val = attrs[name];
+          valueCounts.set(val, (valueCounts.get(val) || 0) + 1);
+        });
+
+        // Get top 10 most common values
+        const topValues = [...valueCounts.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([val]) => val);
+
+        // Select nodes with these values
+        const nodesToSelect = Object.entries(allNodeAttributes)
+          .filter(([nodeId, attrs]) => topValues.includes(attrs[name]))
+          .map(([nodeId]) => nodeId);
+
+        setSelectedNodes(nodesToSelect);
+      });
+
+    g.append("text")
+      .attr("x", innerWidth / 2)
+      .attr("y", innerHeight - 17)
+      .attr("text-anchor", "middle")
+      .attr("fill", "white")
+      .attr("font-size", "9px")
+      .text("Select top 10 most common values")
+      .style("pointer-events", "none");
+  }, [values, allValues, name, allNodeAttributes, setSelectedNodes]);
+
+  return (
+    <div className="high-cardinality-view">
+      <svg ref={svgRef} width="200" height="100"></svg>
     </div>
   );
 }
